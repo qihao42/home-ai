@@ -1,0 +1,26 @@
+{
+  "name": "smarthome-hub",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,sim,dash -c blue,green,magenta \"npm run dev:server\" \"npm run dev:simulator\" \"npm run dev:dashboard\"",
+    "dev:server": "npm run dev -w packages/server",
+    "dev:simulator": "npm run dev -w packages/simulator",
+    "dev:dashboard": "npm run dev -w packages/dashboard",
+    "build": "npm run build -w packages/shared && npm run build -w packages/server && npm run build -w packages/dashboard",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint packages/*/src/**/*.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
+    "@types/node": "^22.0.0"
+  }
+}
