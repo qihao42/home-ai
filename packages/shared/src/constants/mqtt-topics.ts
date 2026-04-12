@@ -17,5 +17,5 @@ export function parseTopic(
 ): { readonly domain: string; readonly deviceId: string; readonly suffix: string } | null {
   const match = topic.match(/^smarthome\/([^/]+)\/([^/]+)\/([^/]+)$/)
   if (!match) return null
-  return { domain: match[1], deviceId: match[2], suffix: match[3] }
+  return { domain: match[1]!, deviceId: match[2]!, suffix: match[3]! }
 }

@@ -104,7 +104,7 @@ function resolveState(domain: EntityDomain, payload: RawPayload): string {
 }
 
 export function mapPayloadToState(
-  entityId: string,
+  _entityId: string,
   domain: EntityDomain,
   payload: RawPayload,
 ): Omit<EntityState, 'entity_id' | 'last_updated'> {

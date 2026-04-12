@@ -70,4 +70,17 @@ export interface WebSocketMessage {
   state?: EntityState
 }
 
-export type PageId = 'dashboard' | 'devices' | 'automations' | 'history'
+export interface SceneEntityState {
+  entityId: string
+  state: string
+  attributes?: Record<string, unknown>
+}
+
+export interface Scene {
+  id: string
+  name: string
+  icon: string
+  entities: SceneEntityState[]
+}
+
+export type PageId = 'dashboard' | 'devices' | 'scenes' | 'automations' | 'history'

@@ -36,7 +36,7 @@ export function AutomationEditor({ automation, onClose }: AutomationEditorProps)
   const entities = useEntityStore((s) => Object.values(s.entities))
 
   const [name, setName] = useState(automation?.name ?? '')
-  const [enabled, setEnabled] = useState(automation?.enabled ?? true)
+  const [enabled, _setEnabled] = useState(automation?.enabled ?? true)
   const [trigger, setTrigger] = useState<AutomationTrigger>(
     automation?.trigger ?? { ...emptyTrigger }
   )

@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react'
 import { MainLayout } from './components/layout/MainLayout'
 import { DashboardPage } from './pages/DashboardPage'
 import { DevicesPage } from './pages/DevicesPage'
+import { ScenesPage } from './pages/ScenesPage'
 import { AutomationsPage } from './pages/AutomationsPage'
 import { HistoryPage } from './pages/HistoryPage'
 import { useWebSocket } from './hooks/use-websocket'
 import { useEntityStore } from './stores/entity-store'
+import { ToastContainer } from './components/notifications/ToastContainer'
 import type { PageId } from './types'
 
 function getInitialPage(): PageId {
   const hash = window.location.hash.replace('#', '')
-  const validPages: PageId[] = ['dashboard', 'devices', 'automations', 'history']
+  const validPages: PageId[] = ['dashboard', 'devices', 'scenes', 'automations', 'history']
   return validPages.includes(hash as PageId) ? (hash as PageId) : 'dashboard'
 }
 
@@ -43,6 +45,8 @@ export function App() {
         return <DashboardPage />
       case 'devices':
         return <DevicesPage />
+      case 'scenes':
+        return <ScenesPage />
       case 'automations':
         return <AutomationsPage />
       case 'history':
@@ -53,12 +57,15 @@ export function App() {
   }
 
   return (
-    <MainLayout
-      currentPage={currentPage}
-      onNavigate={handleNavigate}
-      connected={connected}
-    >
-      {renderPage()}
-    </MainLayout>
+    <>
+      <MainLayout
+        currentPage={currentPage}
+        onNavigate={handleNavigate}
+        connected={connected}
+      >
+        {renderPage()}
+      </MainLayout>
+      <ToastContainer />
+    </>
   )
 }

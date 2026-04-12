@@ -54,10 +54,10 @@ export function SensorCard({ entity }: SensorCardProps) {
         </div>
       </div>
 
-      {entity.attributes.device_class && (
+      {entity.attributes.device_class !== undefined && (
         <div className="mt-3 flex items-center gap-2">
           <span className="rounded-md bg-slate-700/50 px-2 py-0.5 text-xs text-slate-400">
-            {entity.attributes.device_class as string}
+            {String(entity.attributes.device_class)}
           </span>
         </div>
       )}

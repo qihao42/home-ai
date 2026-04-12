@@ -1,4 +1,5 @@
 import { useEntityStore } from '../stores/entity-store'
+import { useNotificationStore } from '../stores/notification-store'
 import { mapEntity } from './client'
 
 let socket: WebSocket | null = null
@@ -91,10 +92,70 @@ interface ServerWsMessage {
   }
 }
 
+function checkForNotifications(
+  newState: { entity_id: string; domain: string; state: string; attributes: Record<string, unknown> },
+  entityName: string
+): void {
+  const { addNotification } = useNotificationStore.getState()
+
+  if (newState.domain === 'binary_sensor') {
+    const deviceClass = newState.attributes.device_class as string | undefined
+
+    if (deviceClass === 'motion' && newState.state === 'on') {
+      addNotification({
+        type: 'alert',
+        title: 'Motion Detected',
+        message: `Motion detected at ${entityName}`,
+      })
+    }
+
+    if (deviceClass === 'door' && newState.state === 'on') {
+      addNotification({
+        type: 'warning',
+        title: 'Door Opened',
+        message: `${entityName} has been opened`,
+      })
+    }
+  }
+
+  if (newState.domain === 'sensor') {
+    const deviceClass = newState.attributes.device_class as string | undefined
+    const value = parseFloat(newState.state)
+
+    if (deviceClass === 'temperature' && !isNaN(value)) {
+      if (value > 35) {
+        addNotification({
+          type: 'warning',
+          title: 'High Temperature',
+          message: `${entityName} is reading ${value}°`,
+        })
+      } else if (value < 10) {
+        addNotification({
+          type: 'warning',
+          title: 'Low Temperature',
+          message: `${entityName} is reading ${value}°`,
+        })
+      }
+    }
+  }
+}
+
 function handleMessage(message: ServerWsMessage): void {
   if (message.type === 'event' && message.event_type === 'state_changed' && message.data?.new_state) {
     const mapped = mapEntity(message.data.new_state)
     useEntityStore.getState().updateEntity(mapped.entityId, mapped)
+    checkForNotifications(message.data.new_state, mapped.name)
+  }
+
+  if (message.type === 'event' && message.event_type === 'scene_activated') {
+    const sceneName = (message.data?.new_state?.attributes?.friendly_name as string)
+      ?? message.data?.entity_id
+      ?? 'Unknown scene'
+    useNotificationStore.getState().addNotification({
+      type: 'success',
+      title: 'Scene Activated',
+      message: `${sceneName} has been activated`,
+    })
   }
 }
 

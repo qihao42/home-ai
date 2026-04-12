@@ -11,7 +11,7 @@
     "dev:server": "npm run dev -w packages/server",
     "dev:simulator": "npm run dev -w packages/simulator",
     "dev:dashboard": "npm run dev -w packages/dashboard",
-    "build": "npm run build -w packages/shared && npm run build -w packages/server && npm run build -w packages/dashboard",
+    "build": "npm run build -w packages/server && npm run build -w packages/dashboard",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

@@ -10,6 +10,8 @@ import { IntegrationRegistry } from './integrations/registry.js'
 import { MqttDeviceIntegration } from './integrations/mqtt-device/index.js'
 import { ActionExecutor } from './automation/action-executor.js'
 import { AutomationEngine } from './automation/engine.js'
+import { SceneStore } from './scenes/scene-store.js'
+import { SceneExecutor } from './scenes/scene-executor.js'
 import { createDatabase } from './persistence/database.js'
 import type { DatabaseConnection } from './persistence/database.js'
 import { runMigrations } from './persistence/migrations.js'
@@ -75,9 +77,14 @@ async function bootstrap(): Promise<SystemHandles> {
   automationEngine.start()
   logger.info('Automation engine started')
 
-  // 11. Start API server
+  // 11. Create scene store and executor
+  const sceneStore = new SceneStore()
+  const sceneExecutor = new SceneExecutor(entityRegistry, mqttClient, eventBus)
+  logger.info('Scene system initialized')
+
+  // 12. Start API server
   const apiServer = await startApi(
-    { entityRegistry, eventBus, mqttClient, automationEngine, stateHistory },
+    { entityRegistry, eventBus, mqttClient, automationEngine, stateHistory, sceneStore, sceneExecutor },
     config.port,
   )
 

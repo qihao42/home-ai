@@ -15,6 +15,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '⊞' },
   { id: 'devices', label: 'Devices', icon: '⚙' },
+  { id: 'scenes', label: 'Scenes', icon: '🎬' },
   { id: 'automations', label: 'Automations', icon: '⚡' },
   { id: 'history', label: 'History', icon: '⏱' },
 ]

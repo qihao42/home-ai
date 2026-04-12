@@ -32,6 +32,11 @@ export type {
 } from './types/event.js'
 
 export type {
+  SceneEntityState,
+  Scene,
+} from './types/scene.js'
+
+export type {
   ApiResponse,
   PaginationMeta,
 } from './types/api.js'
@@ -85,6 +90,16 @@ export type {
   DeviceCapabilitySchema,
   DeviceConfigSchema,
 } from './schemas/device.schema.js'
+
+export {
+  sceneEntityStateSchema,
+  sceneSchema,
+} from './schemas/scene.schema.js'
+
+export type {
+  SceneEntityStateSchema,
+  SceneSchema,
+} from './schemas/scene.schema.js'
 
 // Constants
 export {

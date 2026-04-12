@@ -44,11 +44,6 @@ export const numericStateConditionSchema = z.object({
   below: z.number().optional(),
 })
 
-const baseConditionSchema = z.discriminatedUnion('type', [
-  stateConditionSchema,
-  numericStateConditionSchema,
-])
-
 // For recursive and/or conditions, use lazy evaluation
 export const conditionSchema: z.ZodType = z.lazy(() =>
   z.discriminatedUnion('type', [

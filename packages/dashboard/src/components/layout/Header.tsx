@@ -9,6 +9,7 @@ interface HeaderProps {
 const pageTitles: Record<PageId, string> = {
   dashboard: 'Dashboard',
   devices: 'Devices',
+  scenes: 'Scenes',
   automations: 'Automations',
   history: 'History',
 }

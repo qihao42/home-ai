@@ -2,6 +2,7 @@ import type {
   EntityState,
   AutomationRule,
   HistoryEntry,
+  Scene,
   ApiResponse,
 } from '../types'
 
@@ -32,12 +33,14 @@ async function request<T>(
   path: string,
   options?: RequestInit
 ): Promise<T> {
+  const headers: Record<string, string> = {
+    ...(options?.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+    ...(options?.headers as Record<string, string> ?? {}),
+  }
+
   const response = await fetch(`${BASE_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
     ...options,
+    headers,
   })
 
   if (!response.ok) {
@@ -111,6 +114,17 @@ export async function deleteAutomation(id: string): Promise<void> {
 export async function triggerAutomation(id: string): Promise<void> {
   await request<void>(
     `/automations/${encodeURIComponent(id)}/trigger`,
+    { method: 'POST' }
+  )
+}
+
+export async function fetchScenes(): Promise<Scene[]> {
+  return request<Scene[]>('/scenes')
+}
+
+export async function activateScene(sceneId: string): Promise<void> {
+  await request<void>(
+    `/scenes/${encodeURIComponent(sceneId)}/activate`,
     { method: 'POST' }
   )
 }

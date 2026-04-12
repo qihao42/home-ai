@@ -7,6 +7,7 @@ import servicesRoutes from './routes/services.js'
 import automationsRoutes from './routes/automations.js'
 import historyRoutes from './routes/history.js'
 import devicesRoutes from './routes/devices.js'
+import scenesRoutes from './routes/scenes.js'
 import wsHandlerPlugin from './ws/handler.js'
 import { WsBroadcaster } from './ws/broadcaster.js'
 import type { EntityRegistry } from '../core/entity-registry.js'
@@ -14,6 +15,8 @@ import type { EventBus } from '../core/event-bus.js'
 import type { StateHistory } from '../core/state-history.js'
 import type { AutomationEngineApi } from './routes/automations.js'
 import type { MqttClientApi } from './types.js'
+import type { SceneStore } from '../scenes/scene-store.js'
+import type { SceneExecutor } from '../scenes/scene-executor.js'
 import { createLogger } from '../core/logger.js'
 
 const logger = createLogger('ApiServer')
@@ -24,6 +27,8 @@ export interface ApiDependencies {
   readonly mqttClient: MqttClientApi
   readonly automationEngine: AutomationEngineApi
   readonly stateHistory: StateHistory
+  readonly sceneStore: SceneStore
+  readonly sceneExecutor: SceneExecutor
 }
 
 export async function createApiServer(
@@ -54,6 +59,10 @@ export async function createApiServer(
   })
   await fastify.register(devicesRoutes, {
     entityRegistry: deps.entityRegistry,
+  })
+  await fastify.register(scenesRoutes, {
+    sceneStore: deps.sceneStore,
+    sceneExecutor: deps.sceneExecutor,
   })
 
   // Register WebSocket handler
