@@ -172,8 +172,8 @@ smarthome-hub/
 ### Installation
 
 ```bash
-git clone <repository-url>
-cd smarthome-hub
+git clone https://github.com/qihao42/home-ai.git
+cd home-ai
 npm install
 ```
 
