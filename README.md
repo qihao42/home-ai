@@ -181,19 +181,40 @@ A visual simulator for the Orbital spherical LED device (ESP32-S3 + WS2812B, 8x8
 
 ---
 
+## Testing Milestones (Orbital Hardware)
+
+| Milestone | Test | Success Criteria |
+|-----------|------|-----------------|
+| MS1: Thermal | 48hr continuous run at 100% brightness | No crash, surface temp < 45C |
+| MS2: Fluidity | App-controlled color/animation switching | 60fps, latency < 0.5s |
+| MS3: Smart Home | Home Assistant virtual entity integration | Reads HA state, instant LED response |
+
 ## Roadmap
 
-### Orbital
+### Orbital - Phase 1 (Current)
+- [x] Web LED simulator with 5 animations
+- [x] WebSocket server for hardware bridging
+- [ ] ESP32 firmware (PlatformIO) -- flash when hardware arrives
 - [ ] Home Assistant + MQTT integration
-- [ ] More animations (clock, weather, notifications)
-- [ ] 3D sphere rendering (Three.js) for demo/crowdfunding
-- [ ] ESP32 firmware (PlatformIO)
-- [ ] iOS app (BLE pairing, chat UI)
+- [ ] More animations (clock, weather, Uber arrival, notifications)
+
+### Orbital - Phase 2 (Smart Assistant)
+- [ ] MEMS microphone + voice wake-word
+- [ ] 3D sphere rendering (Three.js) for crowdfunding page
+- [ ] iOS App (BLE pairing, chat UI, SSH terminal)
+- [ ] Cloud Relay API (opt-in AI conversation)
+- [ ] Matter/Thread border router
 
 ### SmartHome Hub
 - [ ] Custom integration support
 - [ ] Scene management UI
 - [ ] Mobile-optimized dashboard
+
+## Documentation
+
+- [Hardware BOM & Wiring](docs/hardware-bom.md) -- Components, purchase links, wiring diagram
+- [Architecture & Strategy](docs/architecture.md) -- Privacy-first design, hybrid AI, financial model
+- [Testing Milestones](docs/testing-milestones.md) -- Detailed test procedures and success criteria
 
 ---
 
