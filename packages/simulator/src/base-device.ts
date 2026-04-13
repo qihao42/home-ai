@@ -23,7 +23,11 @@ export abstract class SimulatedDevice {
         this.mqttClient = mqtt.connect(this.mqttUrl, {
           clientId: `simulator_${this.id}`,
           clean: true,
+          reconnectPeriod: 5000,    // reconnect every 5s instead of default 1s
+          connectTimeout: 10000,
         });
+        // Prevent MaxListenersExceededWarning (11 devices share event system)
+        this.mqttClient.setMaxListeners(20);
 
         this.mqttClient.on("connect", () => {
           this.log("Connected to MQTT broker");
