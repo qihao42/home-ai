@@ -5,6 +5,7 @@ import { DevicesPage } from './pages/DevicesPage'
 import { ScenesPage } from './pages/ScenesPage'
 import { AutomationsPage } from './pages/AutomationsPage'
 import { HistoryPage } from './pages/HistoryPage'
+import { OrbitalPage } from './pages/OrbitalPage'
 import { useWebSocket } from './hooks/use-websocket'
 import { useEntityStore } from './stores/entity-store'
 import { ToastContainer } from './components/notifications/ToastContainer'
@@ -12,7 +13,7 @@ import type { PageId } from './types'
 
 function getInitialPage(): PageId {
   const hash = window.location.hash.replace('#', '')
-  const validPages: PageId[] = ['dashboard', 'devices', 'scenes', 'automations', 'history']
+  const validPages: PageId[] = ['dashboard', 'devices', 'scenes', 'automations', 'history', 'orbital']
   return validPages.includes(hash as PageId) ? (hash as PageId) : 'dashboard'
 }
 
@@ -51,6 +52,8 @@ export function App() {
         return <AutomationsPage />
       case 'history':
         return <HistoryPage />
+      case 'orbital':
+        return <OrbitalPage />
       default:
         return <DashboardPage />
     }

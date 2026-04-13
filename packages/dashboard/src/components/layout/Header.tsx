@@ -12,6 +12,7 @@ const pageTitles: Record<PageId, string> = {
   scenes: 'Scenes',
   automations: 'Automations',
   history: 'History',
+  orbital: 'Orbital LED Sphere',
 }
 
 export function Header({ currentPage, connected }: HeaderProps) {

@@ -18,6 +18,7 @@ const navItems: NavItem[] = [
   { id: 'scenes', label: 'Scenes', icon: '🎬' },
   { id: 'automations', label: 'Automations', icon: '⚡' },
   { id: 'history', label: 'History', icon: '⏱' },
+  { id: 'orbital', label: 'Orbital', icon: '🔮' },
 ]
 
 export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
