@@ -15,10 +15,24 @@ export interface OrbitalMessage {
   readonly payload: unknown
 }
 
-const DEFAULT_URL =
-  (typeof window !== 'undefined' &&
-    (window as unknown as { __ORBITAL_WS_URL__?: string }).__ORBITAL_WS_URL__) ||
-  'ws://localhost:3001'
+function resolveDefaultUrl(): string {
+  if (typeof window === 'undefined') return 'ws://localhost:3001'
+
+  // Explicit override (e.g. set by tests or a config script)
+  const override = (window as unknown as { __ORBITAL_WS_URL__?: string }).__ORBITAL_WS_URL__
+  if (override) return override
+
+  // In production (https://..., http://your-domain) go through the reverse
+  // proxy at /orbital-ws. Only fall back to :3001 for local dev on localhost.
+  const { protocol, hostname, host } = window.location
+  const wsScheme = protocol === 'https:' ? 'wss:' : 'ws:'
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'ws://localhost:3001'
+  }
+  return `${wsScheme}//${host}/orbital-ws`
+}
+
+const DEFAULT_URL = resolveDefaultUrl()
 
 const MAX_BACKOFF_MS = 10_000
 const INITIAL_BACKOFF_MS = 500
