@@ -6,6 +6,7 @@ import type { Animation, Frame } from '../engine/types'
 import { createEmptyFrame } from '../engine/types'
 import { useEntityStore } from '../stores/entity-store'
 import { callService } from '../api/client'
+import { OrbitalBridge } from '../api/orbital-ws'
 import type { EntityState } from '../types'
 
 /** Map smart home events to LED animations */
@@ -59,6 +60,7 @@ function pickAnimationFromEntities(entities: Record<string, EntityState>): { ani
 
 export function OrbitalPage() {
   const engineRef = useRef<AnimationEngine | null>(null)
+  const bridgeRef = useRef<OrbitalBridge | null>(null)
   const [frame, setFrame] = useState<Frame>(createEmptyFrame())
   const [currentAnimation, setCurrentAnimation] = useState<Animation>(animations[0])
   const [brightness, setBrightness] = useState(0.85)
@@ -66,6 +68,7 @@ export function OrbitalPage() {
   const [isPlaying, setIsPlaying] = useState(true)
   const [autoMode, setAutoMode] = useState(true)
   const [autoReason, setAutoReason] = useState('')
+  const [bridgeConnected, setBridgeConnected] = useState(false)
 
   const entities = useEntityStore((s) => s.entities)
 
@@ -81,17 +84,44 @@ export function OrbitalPage() {
     return () => engine.stop()
   }, [])
 
-  // Auto-mode: react to entity states
+  // Initialize Orbital WebSocket bridge (browser <-> ESP32 relay).
+  useEffect(() => {
+    const bridge = new OrbitalBridge()
+    bridgeRef.current = bridge
+    const unsubscribe = bridge.onStatus(setBridgeConnected)
+    bridge.connect()
+    return () => {
+      unsubscribe()
+      bridge.dispose()
+      bridgeRef.current = null
+    }
+  }, [])
+
+  // Broadcast initial + any change in animation/brightness/hue once the
+  // bridge becomes available.
+  useEffect(() => {
+    const bridge = bridgeRef.current
+    if (!bridge || !bridgeConnected) return
+    bridge.send({ type: 'animation', payload: { name: currentAnimation.name, fps: currentAnimation.fps } })
+    bridge.send({ type: 'brightness', payload: { value: brightness } })
+    bridge.send({ type: 'color', payload: { hue } })
+    bridge.send({ type: 'command', payload: { action: isPlaying ? 'play' : 'pause' } })
+  }, [bridgeConnected, currentAnimation, brightness, hue, isPlaying])
+
+  // Auto-mode: react to entity states (debounced to prevent flipping on sensor jitter)
   useEffect(() => {
     if (!autoMode) return
-    const { animation, reason } = pickAnimationFromEntities(entities)
-    if (animation.name !== currentAnimation.name) {
-      setCurrentAnimation(animation)
-      setAutoReason(reason)
-      engineRef.current?.setAnimation(animation)
-    } else if (reason !== autoReason) {
-      setAutoReason(reason)
-    }
+    const handle = setTimeout(() => {
+      const { animation, reason } = pickAnimationFromEntities(entities)
+      if (animation.name !== currentAnimation.name) {
+        setCurrentAnimation(animation)
+        setAutoReason(reason)
+        engineRef.current?.setAnimation(animation)
+      } else if (reason !== autoReason) {
+        setAutoReason(reason)
+      }
+    }, 400)
+    return () => clearTimeout(handle)
   }, [entities, autoMode])
 
   const handleSelectAnimation = useCallback((anim: Animation) => {
@@ -183,6 +213,12 @@ export function OrbitalPage() {
               Auto: {autoReason}
             </div>
           )}
+          <div className="flex items-center gap-2 text-xs">
+            <span className={`w-1.5 h-1.5 rounded-full ${bridgeConnected ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+            <span className="text-slate-500">
+              ESP32 bridge: {bridgeConnected ? 'connected' : 'offline'}
+            </span>
+          </div>
         </div>
 
         {/* Controls */}

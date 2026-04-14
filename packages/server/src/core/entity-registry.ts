@@ -4,6 +4,16 @@ import { createLogger } from './logger.js'
 
 const logger = createLogger('EntityRegistry')
 
+function shallowEqual(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
+  const aKeys = Object.keys(a)
+  const bKeys = Object.keys(b)
+  if (aKeys.length !== bKeys.length) return false
+  for (const k of aKeys) {
+    if (a[k] !== b[k]) return false
+  }
+  return true
+}
+
 export class EntityRegistry {
   private readonly entities: Map<string, Readonly<EntityState>> = new Map()
   private readonly eventBus: EventBus
@@ -36,6 +46,14 @@ export class EntityRegistry {
   ): Readonly<EntityState> {
     const oldState = this.entities.get(entityId) ?? null
 
+    // Skip emitting if nothing meaningful changed (same state + same attributes).
+    // Still store it to keep last_updated fresh, but don't fan out cascades.
+    const unchanged =
+      oldState !== null &&
+      oldState.state === newState.state &&
+      oldState.domain === newState.domain &&
+      shallowEqual(oldState.attributes, newState.attributes)
+
     const fullState: Readonly<EntityState> = Object.freeze({
       ...newState,
       entity_id: entityId,
@@ -43,6 +61,10 @@ export class EntityRegistry {
     })
 
     this.entities.set(entityId, fullState)
+
+    if (unchanged) {
+      return fullState
+    }
 
     const event: StateChangedEvent = Object.freeze({
       entity_id: entityId,

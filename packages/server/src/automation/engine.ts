@@ -132,6 +132,7 @@ export class AutomationEngine {
     for (const rule of rules) {
       this.triggerManager.unregisterTrigger(rule.id)
     }
+    this.triggerManager.clearAllTimers()
 
     this.executionDepth.clear()
     logger.info('Automation engine stopped')

@@ -20,6 +20,15 @@ const migrations: readonly string[] = [
 
   `CREATE INDEX IF NOT EXISTS idx_history_entity_timestamp
     ON state_history(entity_id, timestamp)`,
+
+  `CREATE TABLE IF NOT EXISTS scenes (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    entities TEXT NOT NULL,
+    created_at TEXT,
+    updated_at TEXT
+  )`,
 ]
 
 export function runMigrations(db: DatabaseConnection): void {

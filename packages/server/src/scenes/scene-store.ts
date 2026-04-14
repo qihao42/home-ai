@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import type { Scene } from '@smarthome/shared'
 import { createLogger } from '../core/logger.js'
+import type { SceneRepository } from '../persistence/repositories/scene.repo.js'
 
 const logger = createLogger('SceneStore')
 
@@ -8,9 +9,8 @@ export function generateId(): string {
   return crypto.randomUUID()
 }
 
-const SEED_SCENES: readonly Scene[] = Object.freeze([
+const SEED_SCENES: readonly Omit<Scene, 'id'>[] = Object.freeze([
   Object.freeze({
-    id: generateId(),
     name: 'Good Morning',
     icon: 'sunrise',
     entities: Object.freeze([
@@ -31,7 +31,6 @@ const SEED_SCENES: readonly Scene[] = Object.freeze([
     ]),
   }),
   Object.freeze({
-    id: generateId(),
     name: 'Good Night',
     icon: 'moon',
     entities: Object.freeze([
@@ -55,7 +54,6 @@ const SEED_SCENES: readonly Scene[] = Object.freeze([
     ]),
   }),
   Object.freeze({
-    id: generateId(),
     name: 'Away',
     icon: 'lock',
     entities: Object.freeze([
@@ -79,7 +77,6 @@ const SEED_SCENES: readonly Scene[] = Object.freeze([
     ]),
   }),
   Object.freeze({
-    id: generateId(),
     name: 'Movie Time',
     icon: 'film',
     entities: Object.freeze([
@@ -97,41 +94,52 @@ const SEED_SCENES: readonly Scene[] = Object.freeze([
 ])
 
 export class SceneStore {
-  private readonly scenes: Map<string, Scene> = new Map()
+  private readonly repo: SceneRepository
+  private readonly cache: Map<string, Scene> = new Map()
 
-  constructor() {
-    this.loadSeedScenes()
+  constructor(repo: SceneRepository) {
+    this.repo = repo
+    this.hydrate()
   }
 
-  private loadSeedScenes(): void {
-    if (this.scenes.size > 0) {
-      return
+  private hydrate(): void {
+    if (this.repo.count() === 0) {
+      for (const seed of SEED_SCENES) {
+        const scene: Scene = Object.freeze({ ...seed, id: generateId() })
+        this.repo.upsert(scene)
+      }
+      logger.info(`Seeded ${String(SEED_SCENES.length)} default scenes`)
     }
-    for (const scene of SEED_SCENES) {
-      this.scenes.set(scene.id, scene)
+
+    const scenes = this.repo.findAll()
+    for (const scene of scenes) {
+      this.cache.set(scene.id, scene)
     }
-    logger.info(`Loaded ${String(SEED_SCENES.length)} seed scenes`)
+    logger.info(`Loaded ${String(this.cache.size)} scenes from database`)
   }
 
   getAll(): readonly Scene[] {
-    return Object.freeze([...this.scenes.values()])
+    return Object.freeze([...this.cache.values()])
   }
 
   getById(id: string): Scene | undefined {
-    return this.scenes.get(id)
+    return this.cache.get(id)
   }
 
   save(scene: Scene): Scene {
     const frozen = Object.freeze({ ...scene })
-    this.scenes.set(frozen.id, frozen)
+    this.repo.upsert(frozen)
+    this.cache.set(frozen.id, frozen)
     return frozen
   }
 
   remove(id: string): boolean {
-    return this.scenes.delete(id)
+    const removedInDb = this.repo.delete(id)
+    const removedInCache = this.cache.delete(id)
+    return removedInDb || removedInCache
   }
 
   has(id: string): boolean {
-    return this.scenes.has(id)
+    return this.cache.has(id)
   }
 }

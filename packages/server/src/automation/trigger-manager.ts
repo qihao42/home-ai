@@ -2,6 +2,7 @@ import type {
   Trigger,
   StateTrigger,
   NumericStateTrigger,
+  TimeTrigger,
   StateChangedEvent,
 } from '@smarthome/shared'
 import { createLogger } from '../core/logger.js'
@@ -17,26 +18,26 @@ interface RegisteredTrigger {
   readonly callback: TriggerCallback
 }
 
+const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/
+
 export class TriggerManager {
   private readonly triggers: Map<string, RegisteredTrigger> = new Map()
+  private readonly timeTimers: Map<string, NodeJS.Timeout> = new Map()
 
   registerTrigger(
     automationId: string,
     trigger: Trigger,
     callback: TriggerCallback,
   ): void {
-    if (trigger.type === 'time') {
-      logger.warn(
-        `Time triggers are not implemented in v1, skipping registration for automation ${automationId}`,
-      )
-      return
-    }
-
     this.triggers.set(automationId, Object.freeze({
       automationId,
       trigger,
       callback,
     }))
+
+    if (trigger.type === 'time') {
+      this.scheduleTimeTrigger(automationId, trigger, callback)
+    }
 
     logger.info(`Trigger registered for automation ${automationId}`, {
       type: trigger.type,
@@ -45,9 +46,76 @@ export class TriggerManager {
 
   unregisterTrigger(automationId: string): void {
     const existed = this.triggers.delete(automationId)
+    this.clearTimeTimer(automationId)
     if (existed) {
       logger.info(`Trigger unregistered for automation ${automationId}`)
     }
+  }
+
+  /** For tests / shutdown: clear all pending time timers. */
+  clearAllTimers(): void {
+    for (const id of [...this.timeTimers.keys()]) {
+      this.clearTimeTimer(id)
+    }
+  }
+
+  private clearTimeTimer(automationId: string): void {
+    const timer = this.timeTimers.get(automationId)
+    if (timer !== undefined) {
+      clearTimeout(timer)
+      this.timeTimers.delete(automationId)
+    }
+  }
+
+  private scheduleTimeTrigger(
+    automationId: string,
+    trigger: TimeTrigger,
+    callback: TriggerCallback,
+    now: Date = new Date(),
+  ): void {
+    const match = TIME_PATTERN.exec(trigger.at)
+    if (match === null) {
+      logger.warn(
+        `Invalid time trigger "${trigger.at}" for automation ${automationId} (expected HH:MM)`,
+      )
+      return
+    }
+
+    const hour = Number(match[1])
+    const minute = Number(match[2])
+    const next = new Date(now)
+    next.setHours(hour, minute, 0, 0)
+    if (next.getTime() <= now.getTime()) {
+      next.setDate(next.getDate() + 1)
+    }
+
+    const delay = next.getTime() - now.getTime()
+    const timer = setTimeout(() => {
+      this.timeTimers.delete(automationId)
+      try {
+        callback()
+      } catch (error) {
+        logger.error(
+          `Time trigger callback failed for automation ${automationId}`,
+          String(error),
+        )
+      }
+      // Re-schedule for the next day, unless unregistered in the meantime.
+      if (this.triggers.has(automationId)) {
+        this.scheduleTimeTrigger(automationId, trigger, callback, new Date())
+      }
+    }, delay)
+
+    // Don't keep the event loop alive just for a daily alarm.
+    if (typeof timer.unref === 'function') {
+      timer.unref()
+    }
+
+    this.timeTimers.set(automationId, timer)
+
+    logger.info(
+      `Time trigger scheduled for automation ${automationId} at ${trigger.at} (fires in ${String(Math.round(delay / 1000))}s)`,
+    )
   }
 
   handleStateChange(event: StateChangedEvent): void {

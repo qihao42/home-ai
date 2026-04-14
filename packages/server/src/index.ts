@@ -15,6 +15,7 @@ import { SceneExecutor } from './scenes/scene-executor.js'
 import { createDatabase } from './persistence/database.js'
 import type { DatabaseConnection } from './persistence/database.js'
 import { runMigrations } from './persistence/migrations.js'
+import { SceneRepository } from './persistence/repositories/scene.repo.js'
 import { startApi } from './api/server.js'
 import type { FastifyInstance } from 'fastify'
 
@@ -78,7 +79,8 @@ async function bootstrap(): Promise<SystemHandles> {
   logger.info('Automation engine started')
 
   // 11. Create scene store and executor
-  const sceneStore = new SceneStore()
+  const sceneRepository = new SceneRepository(database)
+  const sceneStore = new SceneStore(sceneRepository)
   const sceneExecutor = new SceneExecutor(entityRegistry, mqttClient, eventBus)
   logger.info('Scene system initialized')
 

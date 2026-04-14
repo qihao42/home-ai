@@ -1,9 +1,9 @@
-import type { Animation } from '../types';
+import type { Animation, Frame } from '../types';
 import { GRID_SIZE, createEmptyFrame } from '../types';
 import { hslToRgb } from '../../utils/color';
 
-// 3x5 digit font for clock display
-const DIGITS: number[][][] = [
+// 3-wide x 5-tall digit font. Two digits + separator fit in 7 cols.
+const DIGITS: readonly (readonly (readonly number[])[])[] = [
   [[1,1,1],[1,0,1],[1,0,1],[1,0,1],[1,1,1]], // 0
   [[0,1,0],[1,1,0],[0,1,0],[0,1,0],[1,1,1]], // 1
   [[1,1,1],[0,0,1],[1,1,1],[1,0,0],[1,1,1]], // 2
@@ -16,14 +16,24 @@ const DIGITS: number[][][] = [
   [[1,1,1],[1,0,1],[1,1,1],[0,0,1],[1,1,1]], // 9
 ];
 
-function drawDigit(frame: ReturnType<typeof createEmptyFrame>, digit: number, offsetX: number, offsetY: number, color: [number, number, number]) {
+function drawDigit(
+  frame: Frame,
+  digit: number,
+  offsetX: number,
+  offsetY: number,
+  color: readonly [number, number, number]
+): void {
   const pattern = DIGITS[digit];
   for (let y = 0; y < 5; y++) {
     for (let x = 0; x < 3; x++) {
       const px = offsetX + x;
       const py = offsetY + y;
-      if (px >= 0 && px < GRID_SIZE && py >= 0 && py < GRID_SIZE && pattern[y][x]) {
-        frame[py][px] = color;
+      if (
+        px >= 0 && px < GRID_SIZE &&
+        py >= 0 && py < GRID_SIZE &&
+        pattern[y][x]
+      ) {
+        frame[py][px] = [color[0], color[1], color[2]];
       }
     }
   }
@@ -37,36 +47,32 @@ export const clock: Animation = {
     const frame = createEmptyFrame();
     const hue = params?.hue ?? 180;
     const color = hslToRgb(hue, 80, 55);
-    const dimColor = hslToRgb(hue, 40, 20);
+    const dimColor = hslToRgb(hue, 40, 25);
 
     const now = new Date();
-    const h = now.getHours();
-    const m = now.getMinutes();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
 
-    const h1 = Math.floor(h / 10);
-    const h2 = h % 10;
-    const m1 = Math.floor(m / 10);
-    const m2 = m % 10;
+    // Display: HH digits on y=0..4, blinking dot row at y=5,
+    // seconds indicator at y=6, minute progress bar at y=7
+    drawDigit(frame, Math.floor(hours / 10), 0, 0, color);
+    drawDigit(frame, hours % 10, 4, 0, color);
 
-    // Draw HH:MM centered on 8x8 grid
-    // Hours: digits at x=0 and x=4, offset y=1
-    drawDigit(frame, h1, 0, 1, color);
-    drawDigit(frame, h2, 4, 1, color);
-
-    // Colon (blinking)
+    // Blinking separator
     if (tick % 2 === 0) {
-      frame[3][3] = dimColor;
       frame[5][3] = dimColor;
+      frame[5][4] = dimColor;
     }
 
-    // Minutes shown as two dots at bottom
-    drawDigit(frame, m1, 0, 1, color);
-    drawDigit(frame, m2, 4, 1, color);
+    // Seconds indicator - dot moves across the grid
+    const secondDot = Math.floor((now.getSeconds() / 60) * GRID_SIZE);
+    frame[6][secondDot] = dimColor;
 
-    // Bottom bar showing minutes progress (0-59 mapped to 0-7)
-    const minuteBar = Math.round((m / 59) * (GRID_SIZE - 1));
-    for (let x = 0; x <= minuteBar; x++) {
-      frame[7][x] = dimColor;
+    // Minute progress bar (0-59 mapped to 0-7 lit cells)
+    const minuteBar = Math.floor((minutes / 60) * GRID_SIZE);
+    for (let x = 0; x < GRID_SIZE; x++) {
+      if (x < minuteBar) frame[7][x] = color;
+      else if (x === minuteBar) frame[7][x] = dimColor;
     }
 
     return frame;
