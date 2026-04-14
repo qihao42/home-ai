@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 
-const PORT = 3001;
+const PORT = Number(process.env.ORBITAL_WS_PORT) || 3101;
 const wss = new WebSocketServer({ port: PORT });
 
 interface OrbitalMessage {

@@ -17,7 +17,7 @@ module.exports = {
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
-        PORT: '3000',
+        PORT: '3100',                      // avoid 3000 (commonly used by Next.js etc.)
         MQTT_PORT: '1883',
         DB_PATH: '../../data/smarthome.db',
       },
@@ -54,6 +54,7 @@ module.exports = {
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
+        ORBITAL_WS_PORT: '3101',           // avoid 3001 (commonly used by sibling APIs)
       },
       max_memory_restart: '128M',
       error_file: '../../logs/orbital-ws-err.log',

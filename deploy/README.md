@@ -22,9 +22,9 @@ aaPanel > Security > Firewall. Open:
 - **443** (HTTPS) - after SSL setup
 
 Keep these closed (internal only):
-- 3000 (API server)
+- 3100 (API server)
 - 1883 (MQTT broker)
-- 3001 (Orbital WebSocket bridge)
+- 3101 (Orbital WebSocket bridge)
 
 ### Step 3: Run the deploy script
 
@@ -130,13 +130,14 @@ pm2 restart all
 ### Dashboard loads but API returns errors
 
 Check Nginx proxy config matches the service ports:
-- `/api` -> `127.0.0.1:3000`
-- `/api/ws` -> `127.0.0.1:3000` (WebSocket upgrade)
+- `/api` -> `127.0.0.1:3100`
+- `/api/ws` -> `127.0.0.1:3100` (WebSocket upgrade)
+- `/orbital-ws` -> `127.0.0.1:3101`
 
 ```bash
 # Confirm server is listening
-ss -lnt | grep 3000
-curl http://127.0.0.1:3000/api/entities
+ss -lnt | grep 3100
+curl http://127.0.0.1:3100/api/entities
 ```
 
 ### MQTT broker won't start
