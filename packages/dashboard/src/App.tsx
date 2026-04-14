@@ -9,6 +9,7 @@ import { OrbitalPage } from './pages/OrbitalPage'
 import { useWebSocket } from './hooks/use-websocket'
 import { useEntityStore } from './stores/entity-store'
 import { ToastContainer } from './components/notifications/ToastContainer'
+import { VoiceButton } from './components/voice/VoiceButton'
 import type { PageId } from './types'
 
 function getInitialPage(): PageId {
@@ -68,6 +69,7 @@ export function App() {
       >
         {renderPage()}
       </MainLayout>
+      <VoiceButton />
       <ToastContainer />
     </>
   )

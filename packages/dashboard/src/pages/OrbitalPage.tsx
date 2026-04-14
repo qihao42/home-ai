@@ -69,8 +69,22 @@ export function OrbitalPage() {
   const [autoMode, setAutoMode] = useState(true)
   const [autoReason, setAutoReason] = useState('')
   const [bridgeConnected, setBridgeConnected] = useState(false)
+  const [matrixSize, setMatrixSize] = useState(320)
 
   const entities = useEntityStore((s) => s.entities)
+
+  // Responsive matrix size based on viewport
+  useEffect(() => {
+    const compute = () => {
+      const w = window.innerWidth
+      if (w < 400) setMatrixSize(240)
+      else if (w < 640) setMatrixSize(280)
+      else setMatrixSize(320)
+    }
+    compute()
+    window.addEventListener('resize', compute)
+    return () => window.removeEventListener('resize', compute)
+  }, [])
 
   // Initialize engine
   useEffect(() => {
@@ -197,10 +211,10 @@ export function OrbitalPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* LED Matrix */}
-        <div className="flex flex-col items-center gap-3">
-          <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50">
-            <LedMatrix frame={frame} size={320} />
+        {/* LED Matrix - responsive sizing */}
+        <div className="flex flex-col items-center gap-3 w-full lg:w-auto">
+          <div className="bg-slate-800/50 rounded-2xl p-4 sm:p-6 border border-slate-700/50">
+            <LedMatrix frame={frame} size={matrixSize} />
           </div>
           <div className="flex items-center gap-2 text-sm">
             <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-green-500 animate-pulse' : 'bg-slate-500'}`} />

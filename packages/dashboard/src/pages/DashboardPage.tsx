@@ -52,7 +52,27 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Welcome banner */}
+      <div className="rounded-2xl bg-gradient-to-br from-purple-500/10 via-blue-500/10 to-pink-500/10 border border-slate-700/50 p-5 md:p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/20 text-2xl flex-shrink-0">
+            👋
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base md:text-lg font-semibold text-white">
+              Welcome home
+            </h3>
+            <p className="mt-1 text-sm text-slate-400">
+              Tap the 🎤 button to control by voice — try saying
+              <span className="mx-1 px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-xs">打开客厅的灯</span>
+              or
+              <span className="mx-1 px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-xs">晚安</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
       {groupedByRoom.map(([room, roomEntities]) => (
         <section key={room}>
           <div className="mb-4 flex items-center gap-3">
