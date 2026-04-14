@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "postinstall": "npm run build -w packages/shared",
     "dev": "concurrently -n server,sim,dash -c blue,green,magenta \"npm run dev:server\" \"npm run dev:simulator\" \"npm run dev:dashboard\"",
     "dev:server": "npm run dev -w packages/server",
     "dev:simulator": "npm run dev -w packages/simulator",
