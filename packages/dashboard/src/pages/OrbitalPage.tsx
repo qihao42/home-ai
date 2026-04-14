@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { LedMatrix } from '../components/orbital/LedMatrix'
 import { AnimationEngine } from '../engine/AnimationEngine'
-import { animations, smile, fire, welcome, alert, night, wave, rainbow } from '../engine/animations'
+import { animations, smile, fire, welcome, night, wave, rainbow } from '../engine/animations'
 import type { Animation, Frame } from '../engine/types'
 import { createEmptyFrame } from '../engine/types'
 import { useEntityStore } from '../stores/entity-store'
