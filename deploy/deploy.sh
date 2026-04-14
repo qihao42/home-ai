@@ -63,8 +63,11 @@ echo "==> Building dashboard"
 npm run build -w packages/dashboard
 
 # --- 6. Restart via PM2 ---
-echo "==> Restarting services via PM2"
-pm2 delete all 2>/dev/null || true
+# IMPORTANT: only delete our own apps, never touch other users' processes.
+echo "==> Restarting HomeAI services via PM2"
+for app in homeai-server homeai-simulator homeai-orbital-ws; do
+  pm2 delete "$app" 2>/dev/null || true
+done
 pm2 start deploy/ecosystem.config.cjs
 pm2 save
 
