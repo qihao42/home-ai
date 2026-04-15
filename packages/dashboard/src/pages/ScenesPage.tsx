@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { fetchScenes, activateScene } from '../api/client'
+import { useNotificationStore } from '../stores/notification-store'
 import type { Scene } from '../types'
 
 const ICON_MAP: Record<string, string> = {
@@ -19,6 +20,8 @@ export function ScenesPage() {
   const [error, setError] = useState<string | null>(null)
   const [activatingId, setActivatingId] = useState<string | null>(null)
   const [activatedId, setActivatedId] = useState<string | null>(null)
+  const addNotification = useNotificationStore((s) => s.addNotification)
+  const autoActivatedRef = useRef<string | null>(null)
 
   const loadScenes = useCallback(async () => {
     try {
@@ -53,6 +56,46 @@ export function ScenesPage() {
       setError(message)
     }
   }
+
+  const handleShare = async (scene: Scene, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const url = `${window.location.origin}/#scenes?activate=${encodeURIComponent(scene.id)}`
+    const shareData = { title: `HomeAI scene: ${scene.name}`, text: `Activate my "${scene.name}" scene`, url }
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        await navigator.clipboard.writeText(url)
+        addNotification({ type: 'success', title: 'Link copied', message: scene.name })
+      }
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return
+      addNotification({ type: 'warning', title: 'Share failed', message: String(err) })
+    }
+  }
+
+  // Auto-activate via URL query param ?activate=<sceneId> (for share links)
+  useEffect(() => {
+    if (loading || scenes.length === 0) return
+    const hash = window.location.hash // e.g. #scenes?activate=<id>
+    const qIdx = hash.indexOf('?')
+    if (qIdx === -1) return
+    const params = new URLSearchParams(hash.slice(qIdx + 1))
+    const toActivate = params.get('activate')
+    if (!toActivate || autoActivatedRef.current === toActivate) return
+    const scene = scenes.find((s) => s.id === toActivate)
+    if (scene) {
+      autoActivatedRef.current = toActivate
+      void handleActivate(scene.id)
+      addNotification({
+        type: 'success',
+        title: 'Shared scene opened',
+        message: `Activating "${scene.name}"`,
+      })
+      // Clean the query so refresh doesn't retrigger
+      window.history.replaceState(null, '', '#scenes')
+    }
+  }, [scenes, loading, addNotification])
 
   if (loading) {
     return (
@@ -123,6 +166,25 @@ export function ScenesPage() {
                 ${isActivating ? 'cursor-wait opacity-70' : 'cursor-pointer'}
               `}
             >
+              {/* Share button in corner */}
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => handleShare(scene, e)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') handleShare(scene, e as unknown as React.MouseEvent)
+                }}
+                aria-label={`Share ${scene.name}`}
+                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-700 hover:text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3"/>
+                  <circle cx="6" cy="12" r="3"/>
+                  <circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+              </span>
               <div
                 className={`
                   flex h-16 w-16 items-center justify-center rounded-2xl text-3xl

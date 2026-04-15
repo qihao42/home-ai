@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useVoiceInput, speak } from '../../hooks/use-voice-input'
 import { parseVoiceCommand, answerQuery } from '../../utils/voice-parser'
-import type { ParsedCommand } from '../../utils/voice-parser'
+import type { ParsedCommand, ConversationContext } from '../../utils/voice-parser'
 import { useEntityStore } from '../../stores/entity-store'
 import { useNotificationStore } from '../../stores/notification-store'
 import { callService, fetchScenes, activateScene } from '../../api/client'
@@ -21,6 +21,7 @@ export function VoiceButton() {
   const voice = useVoiceInput(lang)
   const entities = useEntityStore((s) => s.entities)
   const addNotification = useNotificationStore((s) => s.addNotification)
+  const contextRef = useRef<ConversationContext>({})
 
   useEffect(() => {
     localStorage.setItem('voice-lang', lang)
@@ -69,6 +70,34 @@ export function VoiceButton() {
             break
           }
 
+          case 'set_brightness': {
+            if (intent.entityId) {
+              const id = intent.entityId.split('.').pop() ?? intent.entityId
+              await callService('light', 'turn_on', {
+                entity_id: id,
+                brightness: intent.brightness,
+              })
+            } else {
+              feedback = `找不到 ${intent.target}`
+            }
+            break
+          }
+
+          case 'adjust_brightness': {
+            if (intent.entityId) {
+              const id = intent.entityId.split('.').pop() ?? intent.entityId
+              // Read current brightness from store, apply delta, clamp 0..255
+              const current = entities[intent.entityId] ?? Object.values(entities).find((e) => e.entityId === intent.entityId)
+              const prev = (current?.attributes.brightness as number) ?? 128
+              const next = Math.max(0, Math.min(255, prev + intent.delta))
+              await callService('light', 'turn_on', { entity_id: id, brightness: next })
+              feedback = `${intent.target} 亮度调到 ${Math.round((next / 255) * 100)}%`
+            } else {
+              feedback = '不知道要调哪个灯'
+            }
+            break
+          }
+
           case 'activate_scene': {
             const scenes = await fetchScenes()
             const match = scenes.find(
@@ -113,10 +142,11 @@ export function VoiceButton() {
     [entities, addNotification, lang]
   )
 
-  // When final transcript arrives, parse + execute
+  // When final transcript arrives, parse (with context) + execute
   useEffect(() => {
     if (!voice.transcript) return
-    const parsed = parseVoiceCommand(voice.transcript, entities)
+    const parsed = parseVoiceCommand(voice.transcript, entities, contextRef.current)
+    contextRef.current = parsed.nextContext
     setLastCommand(parsed)
     void executeCommand(parsed)
     voice.reset()
@@ -236,16 +266,38 @@ export function VoiceButton() {
               )}
             </div>
 
+            {/* Context indicator */}
+            {contextRef.current.lastEntityName && (
+              <div className="px-5 pb-2">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />
+                  <span className="text-slate-400">
+                    Remembers: <span className="text-purple-300 font-medium">{contextRef.current.lastEntityName}</span>
+                    <span className="text-slate-500"> — say "再亮一点" / "关掉" / "it"</span>
+                  </span>
+                  <button
+                    onClick={() => {
+                      contextRef.current = {}
+                      setLastCommand(null)
+                    }}
+                    className="ml-auto text-slate-500 hover:text-slate-300"
+                  >
+                    清除
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Quick examples */}
             <div className="px-5 pb-4">
               <p className="text-xs text-slate-500 mb-2">试试说：</p>
               <div className="flex flex-wrap gap-2">
                 {[
                   '打开客厅的灯',
-                  '关闭所有灯',
+                  '再亮一点',
+                  '关掉',
                   '晚安',
                   '温度多少度',
-                  '冰箱打开',
                 ].map((ex) => (
                   <span
                     key={ex}
