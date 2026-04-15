@@ -19,10 +19,16 @@ export function Header({ currentPage, connected }: HeaderProps) {
   const entityCount = useEntityStore((s) => Object.keys(s.entities).length)
 
   return (
-    <header className="flex h-16 items-center justify-between gap-3 border-b border-slate-700/50 bg-[var(--bg-secondary)] pl-16 pr-4 md:px-8">
-      <h2 className="text-base font-semibold text-white truncate md:text-xl">
-        {pageTitles[currentPage]}
-      </h2>
+    <header
+      className="flex h-16 items-center justify-between gap-3 border-b border-slate-700/50 bg-[var(--bg-secondary)] px-4 md:px-8"
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+    >
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-xl md:hidden">🏠</span>
+        <h2 className="text-base font-semibold text-white truncate md:text-xl">
+          {pageTitles[currentPage]}
+        </h2>
+      </div>
 
       <div className="flex items-center gap-3 md:gap-6 flex-shrink-0">
         {/* Entity count - hidden on small screens */}

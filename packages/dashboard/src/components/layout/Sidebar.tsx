@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import type { PageId } from '../../types'
 
 interface SidebarProps {
@@ -22,11 +21,9 @@ const navItems: NavItem[] = [
 ]
 
 export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
-  const [mobileOpen, setMobileOpen] = useState(false)
-
+  // Mobile sidebar is replaced by MobileBottomNav; only keep desktop rail.
   const handleNav = (page: PageId) => {
     onNavigate(page)
-    setMobileOpen(false)
   }
 
   const sidebarContent = (
@@ -81,39 +78,8 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   )
 
   return (
-    <>
-      {/* Mobile hamburger button */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800 text-white shadow-lg md:hidden"
-        aria-label="Open menu"
-      >
-        ☰
-      </button>
-
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 md:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Mobile sidebar */}
-      <aside
-        className={`
-          fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[var(--bg-secondary)] border-r border-slate-700/50
-          transform transition-transform duration-200 ease-in-out md:hidden
-          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
-      >
-        {sidebarContent}
-      </aside>
-
-      {/* Desktop sidebar */}
-      <aside className="hidden h-screen w-64 flex-col bg-[var(--bg-secondary)] border-r border-slate-700/50 md:flex">
-        {sidebarContent}
-      </aside>
-    </>
+    <aside className="hidden h-screen w-64 flex-col bg-[var(--bg-secondary)] border-r border-slate-700/50 md:flex">
+      {sidebarContent}
+    </aside>
   )
 }

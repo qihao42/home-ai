@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useEntityStore } from '../stores/entity-store'
 import { EntityCard } from '../components/cards/EntityCard'
+import { SceneQuickCards } from '../components/cards/SceneQuickCards'
 
 export function DashboardPage() {
   const entities = useEntityStore((s) => s.entities)
@@ -72,6 +73,9 @@ export function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Quick scene activation */}
+      <SceneQuickCards />
 
       {groupedByRoom.map(([room, roomEntities]) => (
         <section key={room}>

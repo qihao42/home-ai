@@ -151,15 +151,16 @@ export function VoiceButton() {
 
   return (
     <>
-      {/* Floating mic button */}
+      {/* Floating mic button - sits above bottom nav on mobile */}
       <button
         onClick={handleClick}
         aria-label={voice.listening ? 'Stop listening' : 'Start voice command'}
-        className={`fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition-all ${
+        style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
+        className={`fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition-all md:!bottom-6 md:right-6 md:h-16 md:w-16 ${
           voice.listening
             ? 'bg-red-500 animate-pulse scale-110'
             : 'bg-gradient-to-br from-purple-500 to-pink-500 hover:scale-105'
-        } md:h-16 md:w-16`}
+        }`}
       >
         <span className="text-2xl md:text-3xl">🎤</span>
         {voice.listening && (
