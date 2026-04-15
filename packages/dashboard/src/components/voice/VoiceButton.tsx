@@ -22,6 +22,7 @@ export function VoiceButton() {
   const addNotification = useNotificationStore((s) => s.addNotification)
   const { t } = useTranslation()
   const contextRef = useRef<ConversationContext>({})
+  const executingRef = useRef(false)
 
   const executeCommand = useCallback(
     async (parsed: ParsedCommand) => {
@@ -138,15 +139,22 @@ export function VoiceButton() {
     [entities, addNotification, lang, t]
   )
 
-  // When final transcript arrives, parse (with context) + execute
+  // When final transcript arrives, parse (with context) + execute.
+  // Use a ref to guard against overlapping executions if two transcripts
+  // arrive rapidly. Listing executeCommand in deps keeps the closure fresh.
   useEffect(() => {
     if (!voice.transcript) return
+    if (executingRef.current) return
+    executingRef.current = true
     const parsed = parseVoiceCommand(voice.transcript, entities, contextRef.current, settingsLang)
     contextRef.current = parsed.nextContext
     setLastCommand(parsed)
-    void executeCommand(parsed)
+    void executeCommand(parsed).finally(() => {
+      executingRef.current = false
+    })
     voice.reset()
-  }, [voice.transcript])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice.transcript, executeCommand, settingsLang])
 
   const handleClick = () => {
     if (!voice.supported) {

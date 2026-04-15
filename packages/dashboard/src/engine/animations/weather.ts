@@ -202,7 +202,15 @@ export async function refreshWeather(fallbackLat = 3.139, fallbackLon = 101.6869
   try {
     const { lat, lon } = await getCoords()
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`
-    const res = await fetch(url)
+    // Hard timeout via AbortController so a slow/hanging API doesn't leak forever
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 8000)
+    let res: Response
+    try {
+      res = await fetch(url, { signal: controller.signal })
+    } finally {
+      clearTimeout(timeoutId)
+    }
     if (!res.ok) return null
     const json = (await res.json()) as {
       current?: { temperature_2m?: number; weather_code?: number }

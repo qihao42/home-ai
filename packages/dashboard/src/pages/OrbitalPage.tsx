@@ -133,7 +133,8 @@ export function OrbitalPage() {
     bridge.send({ type: 'command', payload: { action: isPlaying ? 'play' : 'pause' } })
   }, [bridgeConnected, currentAnimation, brightness, hue, isPlaying])
 
-  // Auto-mode: react to entity states (debounced to prevent flipping on sensor jitter)
+  // Auto-mode: react to entity states (debounced to prevent flipping on sensor jitter).
+  // Include currentAnimation.name and autoReason in deps so the closure stays fresh.
   useEffect(() => {
     if (!autoMode) return
     const handle = setTimeout(() => {
@@ -147,7 +148,7 @@ export function OrbitalPage() {
       }
     }, 400)
     return () => clearTimeout(handle)
-  }, [entities, autoMode])
+  }, [entities, autoMode, currentAnimation.name, autoReason])
 
   const handleSelectAnimation = useCallback((anim: Animation) => {
     setAutoMode(false)

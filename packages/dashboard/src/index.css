@@ -109,6 +109,46 @@ body {
   }
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+ * Light-mode overrides for fixed Tailwind slate/white classes.
+ * Components originally designed dark-first used raw `text-white`,
+ * `text-slate-*`, `bg-slate-*` etc. These would stay dark even after
+ * theme switch. Below we map them to readable equivalents in light mode.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+:root.light .text-white { color: #0f172a !important; }
+:root.light .text-slate-200 { color: #1e293b !important; }
+:root.light .text-slate-300 { color: #334155 !important; }
+:root.light .text-slate-400 { color: #64748b !important; }
+:root.light .text-slate-500 { color: #94a3b8 !important; }
+
+:root.light .bg-slate-900 { background-color: #ffffff !important; }
+:root.light .bg-slate-800 { background-color: #f8fafc !important; }
+:root.light .bg-slate-700 { background-color: #e2e8f0 !important; }
+:root.light .bg-slate-800\/50 { background-color: rgba(241, 245, 249, 0.7) !important; }
+:root.light .bg-slate-800\/40 { background-color: rgba(241, 245, 249, 0.6) !important; }
+:root.light .bg-slate-800\/70 { background-color: rgba(226, 232, 240, 0.85) !important; }
+:root.light .bg-slate-800\/30 { background-color: rgba(241, 245, 249, 0.5) !important; }
+:root.light .bg-slate-700\/50 { background-color: rgba(226, 232, 240, 0.9) !important; }
+:root.light .bg-slate-700\/30 { background-color: rgba(226, 232, 240, 0.7) !important; }
+:root.light .bg-slate-600 { background-color: #cbd5e1 !important; }
+:root.light .hover\:bg-slate-600:hover { background-color: #94a3b8 !important; }
+
+:root.light .border-slate-700 { border-color: rgba(15, 23, 42, 0.1) !important; }
+:root.light .border-slate-700\/50 { border-color: rgba(15, 23, 42, 0.08) !important; }
+:root.light .border-slate-700\/30 { border-color: rgba(15, 23, 42, 0.05) !important; }
+:root.light .border-slate-600 { border-color: rgba(15, 23, 42, 0.15) !important; }
+:root.light .border-slate-600\/50 { border-color: rgba(15, 23, 42, 0.1) !important; }
+
+/* Voice panel uses bg-slate-900 directly — make it a light card */
+:root.light .hover\:bg-slate-700\/50:hover { background-color: rgba(226, 232, 240, 0.8) !important; }
+:root.light .hover\:bg-slate-700\/30:hover { background-color: rgba(226, 232, 240, 0.6) !important; }
+:root.light .hover\:bg-slate-800:hover { background-color: rgba(226, 232, 240, 0.6) !important; }
+:root.light .hover\:text-white:hover { color: #0f172a !important; }
+
+/* Placeholder and muted text */
+:root.light .placeholder-slate-500::placeholder { color: #94a3b8 !important; }
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

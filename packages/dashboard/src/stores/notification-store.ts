@@ -19,6 +19,19 @@ interface NotificationStore {
 const MAX_NOTIFICATIONS = 50
 const AUTO_DISMISS_MS = 8000
 
+// Track pending auto-dismiss timers so we can cancel them on manual dismiss
+// or clearAll(). Without this the timeouts leak and can fire after the
+// notification is already gone, causing orphaned store writes.
+const dismissTimers = new Map<string, ReturnType<typeof setTimeout>>()
+
+function cancelTimer(id: string): void {
+  const timer = dismissTimers.get(id)
+  if (timer !== undefined) {
+    clearTimeout(timer)
+    dismissTimers.delete(id)
+  }
+}
+
 export const useNotificationStore = create<NotificationStore>((set) => ({
   notifications: [],
 
@@ -35,12 +48,15 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
       return { notifications: updated }
     })
 
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      dismissTimers.delete(notification.id)
       useNotificationStore.getState().dismissNotification(notification.id)
     }, AUTO_DISMISS_MS)
+    dismissTimers.set(notification.id, timer)
   },
 
   dismissNotification(id) {
+    cancelTimer(id)
     set((prev) => ({
       notifications: prev.notifications.map((n) =>
         n.id === id ? { ...n, dismissed: true } : n
@@ -49,6 +65,7 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
   },
 
   clearAll() {
+    for (const id of dismissTimers.keys()) cancelTimer(id)
     set({ notifications: [] })
   },
 }))

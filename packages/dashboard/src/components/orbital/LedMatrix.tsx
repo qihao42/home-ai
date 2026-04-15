@@ -14,7 +14,8 @@ export function LedMatrix({ frame, size = 400 }: LedMatrixProps) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     const cellSize = size / GRID_SIZE;
     const ledRadius = cellSize * 0.38;
 
