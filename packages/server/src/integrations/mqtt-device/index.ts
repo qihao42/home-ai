@@ -37,14 +37,20 @@ export class MqttDeviceIntegration implements Integration {
   async setup(context: IntegrationContext): Promise<void> {
     this.context = context
 
+    // Our own devices
     await context.mqttClient.subscribe('smarthome/+/+/state')
     await context.mqttClient.subscribe('smarthome/+/+/config')
+
+    // Home Assistant-compatible discovery (bridged devices from HA instance)
+    // See https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery
+    await context.mqttClient.subscribe('homeassistant/+/+/state')
+    await context.mqttClient.subscribe('homeassistant/+/+/config')
 
     context.mqttClient.onMessage((topic: string, payload: string) => {
       this.handleMessage(topic, payload)
     })
 
-    logger.info('MQTT Device Integration setup complete')
+    logger.info('MQTT Device Integration setup complete (native + Home Assistant compatible)')
   }
 
   async teardown(): Promise<void> {

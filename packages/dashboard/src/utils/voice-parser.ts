@@ -97,10 +97,18 @@ function rememberEntity(
   }
 }
 
+type Lang = 'zh' | 'en'
+
+/** English/Chinese-aware response builder */
+function r(lang: Lang, en: string, zh: string): string {
+  return lang === 'en' ? en : zh
+}
+
 export function parseVoiceCommand(
   rawText: string,
   entities: Record<string, EntityState>,
-  context: ConversationContext = {}
+  context: ConversationContext = {},
+  lang: Lang = 'zh'
 ): ParsedCommand {
   const text = norm(rawText)
   if (!text) {
@@ -113,7 +121,7 @@ export function parseVoiceCommand(
   }
 
   // Scene activation - always clears context since scene touches many entities
-  const sceneMatch = matchScene(text)
+  const sceneMatch = matchScene(text, lang)
   if (sceneMatch) {
     return {
       intent: { kind: 'activate_scene', sceneName: sceneMatch.name },
@@ -332,15 +340,15 @@ interface SceneMatch {
   readonly response: string
 }
 
-function matchScene(text: string): SceneMatch | null {
+function matchScene(text: string, lang: Lang): SceneMatch | null {
   if (text.includes('晚安') || text.includes('good night') || text.includes('night mode'))
-    return { name: 'Good Night', response: '晚安，切换到夜间模式' }
+    return { name: 'Good Night', response: r(lang, 'Good night, switching to night mode', '晚安，切换到夜间模式') }
   if (text.includes('早安') || text.includes('早上好') || text.includes('good morning'))
-    return { name: 'Good Morning', response: '早安！启动晨间场景' }
+    return { name: 'Good Morning', response: r(lang, 'Good morning! Starting morning scene', '早安！启动晨间场景') }
   if (text.includes('看电影') || text.includes('movie') || text.includes('电影模式'))
-    return { name: 'Movie Time', response: '切换到观影模式' }
+    return { name: 'Movie Time', response: r(lang, 'Switching to movie mode', '切换到观影模式') }
   if (text.includes('出门') || text.includes('离家') || text.includes('away'))
-    return { name: 'Away', response: '切换到离家模式' }
+    return { name: 'Away', response: r(lang, 'Switching to away mode', '切换到离家模式') }
   return null
 }
 

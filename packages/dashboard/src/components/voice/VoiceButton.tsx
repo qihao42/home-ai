@@ -4,28 +4,24 @@ import { parseVoiceCommand, answerQuery } from '../../utils/voice-parser'
 import type { ParsedCommand, ConversationContext } from '../../utils/voice-parser'
 import { useEntityStore } from '../../stores/entity-store'
 import { useNotificationStore } from '../../stores/notification-store'
+import { useSettingsStore } from '../../stores/settings-store'
+import { useTranslation } from '../../i18n/useTranslation'
+import type { TranslationKey } from '../../i18n/translations'
 import { callService, fetchScenes, activateScene } from '../../api/client'
 
-const LANG_OPTIONS = [
-  { code: 'zh-CN', label: '中文' },
-  { code: 'en-US', label: 'EN' },
-]
-
 export function VoiceButton() {
-  const [lang, setLang] = useState<string>(() =>
-    localStorage.getItem('voice-lang') ?? 'zh-CN'
-  )
+  const settingsLang = useSettingsStore((s) => s.language)
+  const setSettingsLang = useSettingsStore((s) => s.setLanguage)
+  // Speech recognition locale derived from UI language
+  const lang = settingsLang === 'en' ? 'en-US' : 'zh-CN'
   const [showPanel, setShowPanel] = useState(false)
   const [lastCommand, setLastCommand] = useState<ParsedCommand | null>(null)
   const [executing, setExecuting] = useState(false)
   const voice = useVoiceInput(lang)
   const entities = useEntityStore((s) => s.entities)
   const addNotification = useNotificationStore((s) => s.addNotification)
+  const { t } = useTranslation()
   const contextRef = useRef<ConversationContext>({})
-
-  useEffect(() => {
-    localStorage.setItem('voice-lang', lang)
-  }, [lang])
 
   const executeCommand = useCallback(
     async (parsed: ParsedCommand) => {
@@ -127,25 +123,25 @@ export function VoiceButton() {
         if (feedback) {
           addNotification({
             type: parsed.intent.kind === 'unknown' ? 'warning' : 'success',
-            title: parsed.intent.kind === 'unknown' ? '未识别' : '语音指令',
+            title: parsed.intent.kind === 'unknown' ? t('voice.notUnderstood') : t('voice.commandReceived'),
             message: feedback,
           })
           speak(feedback, lang)
         }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : '执行失败'
-        addNotification({ type: 'alert', title: '错误', message: msg })
+        const msg = err instanceof Error ? err.message : 'Execution failed'
+        addNotification({ type: 'alert', title: t('voice.error'), message: msg })
       } finally {
         setExecuting(false)
       }
     },
-    [entities, addNotification, lang]
+    [entities, addNotification, lang, t]
   )
 
   // When final transcript arrives, parse (with context) + execute
   useEffect(() => {
     if (!voice.transcript) return
-    const parsed = parseVoiceCommand(voice.transcript, entities, contextRef.current)
+    const parsed = parseVoiceCommand(voice.transcript, entities, contextRef.current, settingsLang)
     contextRef.current = parsed.nextContext
     setLastCommand(parsed)
     void executeCommand(parsed)
@@ -156,8 +152,8 @@ export function VoiceButton() {
     if (!voice.supported) {
       addNotification({
         type: 'warning',
-        title: '不支持语音',
-        message: '请使用 Chrome / Edge / Safari',
+        title: t('voice.unsupported'),
+        message: t('voice.unsupportedBody'),
       })
       return
     }
@@ -215,25 +211,28 @@ export function VoiceButton() {
                   voice.listening ? 'bg-red-500 animate-pulse' : 'bg-slate-500'
                 }`} />
                 <span className="text-sm font-semibold text-white">
-                  {voice.listening ? '正在聆听...' : executing ? '执行中...' : '语音助手'}
+                  {voice.listening ? t('voice.listening') : executing ? t('voice.executing') : t('voice.title')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {/* Language toggle */}
+                {/* Language toggle (also switches UI-wide language) */}
                 <div className="flex rounded-lg border border-slate-700 p-0.5 text-xs">
-                  {LANG_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.code}
-                      onClick={() => setLang(opt.code)}
-                      className={`px-2 py-1 rounded ${
-                        lang === opt.code
-                          ? 'bg-purple-500/20 text-purple-300'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+                  <button
+                    onClick={() => setSettingsLang('zh')}
+                    className={`px-2 py-1 rounded ${
+                      settingsLang === 'zh' ? 'bg-purple-500/20 text-purple-300' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    中文
+                  </button>
+                  <button
+                    onClick={() => setSettingsLang('en')}
+                    className={`px-2 py-1 rounded ${
+                      settingsLang === 'en' ? 'bg-purple-500/20 text-purple-300' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    EN
+                  </button>
                 </div>
                 <button
                   onClick={handleClose}
@@ -251,18 +250,18 @@ export function VoiceButton() {
                   {voice.interimTranscript}
                 </p>
               ) : voice.listening ? (
-                <p className="text-lg text-slate-500 text-center">说话吧...</p>
+                <p className="text-lg text-slate-500 text-center">{t('voice.speak')}</p>
               ) : lastCommand ? (
                 <div className="text-center space-y-2">
                   <p className="text-lg text-white">{lastCommand.response}</p>
                   {lastCommand.confidence > 0 && (
                     <p className="text-xs text-slate-500">
-                      置信度 {Math.round(lastCommand.confidence * 100)}%
+                      {t('voice.confidence')} {Math.round(lastCommand.confidence * 100)}%
                     </p>
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-slate-500 text-center">点下方按钮开始说话</p>
+                <p className="text-sm text-slate-500 text-center">{t('voice.idle')}</p>
               )}
             </div>
 
@@ -272,8 +271,8 @@ export function VoiceButton() {
                 <div className="flex items-center gap-2 text-xs">
                   <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />
                   <span className="text-slate-400">
-                    Remembers: <span className="text-purple-300 font-medium">{contextRef.current.lastEntityName}</span>
-                    <span className="text-slate-500"> — say "再亮一点" / "关掉" / "it"</span>
+                    {t('voice.remembers')}: <span className="text-purple-300 font-medium">{contextRef.current.lastEntityName}</span>
+                    <span className="text-slate-500"> — {t('voice.tryHint')}</span>
                   </span>
                   <button
                     onClick={() => {
@@ -282,7 +281,7 @@ export function VoiceButton() {
                     }}
                     className="ml-auto text-slate-500 hover:text-slate-300"
                   >
-                    清除
+                    {t('voice.clearContext')}
                   </button>
                 </div>
               </div>
@@ -290,20 +289,22 @@ export function VoiceButton() {
 
             {/* Quick examples */}
             <div className="px-5 pb-4">
-              <p className="text-xs text-slate-500 mb-2">试试说：</p>
+              <p className="text-xs text-slate-500 mb-2">{t('voice.examples')}</p>
               <div className="flex flex-wrap gap-2">
-                {[
-                  '打开客厅的灯',
-                  '再亮一点',
-                  '关掉',
-                  '晚安',
-                  '温度多少度',
-                ].map((ex) => (
+                {(
+                  [
+                    'voice.example.turnOnLivingRoom',
+                    'voice.example.brighter',
+                    'voice.example.turnOff',
+                    'voice.example.goodNight',
+                    'voice.example.whatsTemperature',
+                  ] as TranslationKey[]
+                ).map((ex) => (
                   <span
                     key={ex}
                     className="px-2.5 py-1 rounded-full bg-slate-800 text-xs text-slate-400 border border-slate-700"
                   >
-                    {ex}
+                    {t(ex)}
                   </span>
                 ))}
               </div>
@@ -316,14 +317,14 @@ export function VoiceButton() {
                 disabled={voice.listening || executing}
                 className="flex-1 py-2.5 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 text-sm font-medium hover:bg-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                🎤 {voice.listening ? '聆听中...' : '开始说话'}
+                🎤 {voice.listening ? t('voice.listening') : t('voice.start')}
               </button>
               {voice.listening && (
                 <button
                   onClick={voice.stop}
                   className="px-4 py-2.5 rounded-lg bg-red-500/20 border border-red-500/40 text-red-300 text-sm font-medium hover:bg-red-500/30"
                 >
-                  停止
+                  {t('voice.stop')}
                 </button>
               )}
             </div>

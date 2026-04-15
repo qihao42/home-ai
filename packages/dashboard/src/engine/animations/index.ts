@@ -7,6 +7,7 @@ import { welcome } from './welcome';
 import { clock } from './clock';
 import { alert } from './alert';
 import { night } from './night';
+import { weather } from './weather';
 
 export const animations: Animation[] = [
   smile,
@@ -15,8 +16,10 @@ export const animations: Animation[] = [
   wave,
   welcome,
   clock,
+  weather,
   alert,
   night,
 ];
 
-export { smile, fire, rainbow, wave, welcome, clock, alert, night };
+export { smile, fire, rainbow, wave, welcome, clock, alert, night, weather };
+export { refreshWeather, updateWeather, getWeather } from './weather';

@@ -6,15 +6,19 @@ import { ScenesPage } from './pages/ScenesPage'
 import { AutomationsPage } from './pages/AutomationsPage'
 import { HistoryPage } from './pages/HistoryPage'
 import { OrbitalPage } from './pages/OrbitalPage'
+import { FeaturesPage } from './pages/FeaturesPage'
 import { useWebSocket } from './hooks/use-websocket'
 import { useEntityStore } from './stores/entity-store'
+import { useSettingsStore } from './stores/settings-store'
 import { ToastContainer } from './components/notifications/ToastContainer'
 import { VoiceButton } from './components/voice/VoiceButton'
 import type { PageId } from './types'
 
 function getInitialPage(): PageId {
-  const hash = window.location.hash.replace('#', '')
-  const validPages: PageId[] = ['dashboard', 'devices', 'scenes', 'automations', 'history', 'orbital']
+  const hash = window.location.hash.replace('#', '').split('?')[0]
+  const validPages: PageId[] = [
+    'dashboard', 'devices', 'scenes', 'automations', 'history', 'orbital', 'features',
+  ]
   return validPages.includes(hash as PageId) ? (hash as PageId) : 'dashboard'
 }
 
@@ -22,10 +26,22 @@ export function App() {
   const [currentPage, setCurrentPage] = useState<PageId>(getInitialPage)
   const { connected } = useWebSocket()
   const fetchAll = useEntityStore((s) => s.fetchAll)
+  const theme = useSettingsStore((s) => s.theme)
 
   useEffect(() => {
     fetchAll()
   }, [fetchAll])
+
+  // Apply theme class + meta theme-color to the document
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.remove('dark', 'light')
+    root.classList.add(theme)
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta instanceof HTMLMetaElement) {
+      meta.content = theme === 'dark' ? '#0f172a' : '#ffffff'
+    }
+  }, [theme])
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -55,6 +71,8 @@ export function App() {
         return <HistoryPage />
       case 'orbital':
         return <OrbitalPage />
+      case 'features':
+        return <FeaturesPage />
       default:
         return <DashboardPage />
     }

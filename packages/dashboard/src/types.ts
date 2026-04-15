@@ -83,4 +83,4 @@ export interface Scene {
   entities: SceneEntityState[]
 }
 
-export type PageId = 'dashboard' | 'devices' | 'scenes' | 'automations' | 'history' | 'orbital'
+export type PageId = 'dashboard' | 'devices' | 'scenes' | 'automations' | 'history' | 'orbital' | 'features'

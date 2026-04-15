@@ -2,17 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* Dark theme (default) */
+:root,
+:root.dark {
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-card: #334155;
+  --bg-elevated: #475569;
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: rgba(148, 163, 184, 0.12);
+  --border-strong: rgba(148, 163, 184, 0.25);
   --accent: #3b82f6;
   --accent-hover: #2563eb;
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
+  color-scheme: dark;
+}
+
+/* Light theme */
+:root.light {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-elevated: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: rgba(15, 23, 42, 0.08);
+  --border-strong: rgba(15, 23, 42, 0.18);
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  color-scheme: light;
 }
 
 body {
@@ -23,6 +49,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 * {
@@ -31,20 +58,30 @@ body {
 
 @layer components {
   .card {
-    @apply rounded-xl border border-slate-700/50 bg-[var(--bg-card)] p-4 shadow-lg
-      transition-all duration-200 hover:border-slate-600/50 hover:shadow-xl;
+    @apply rounded-xl border p-4 shadow-lg transition-all duration-200;
+    background-color: var(--bg-card);
+    border-color: var(--border);
+  }
+  .card:hover {
+    border-color: var(--border-strong);
   }
 
   .btn-primary {
-    @apply rounded-lg bg-[var(--accent)] px-4 py-2 font-medium text-white
-      transition-colors duration-150 hover:bg-[var(--accent-hover)]
+    @apply rounded-lg px-4 py-2 font-medium text-white
+      transition-colors duration-150
       focus:outline-none focus:ring-2 focus:ring-blue-500/50;
+    background-color: var(--accent);
+  }
+  .btn-primary:hover {
+    background-color: var(--accent-hover);
   }
 
   .btn-secondary {
-    @apply rounded-lg border border-slate-600 bg-slate-700 px-4 py-2
-      font-medium text-slate-200 transition-colors duration-150
-      hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500/50;
+    @apply rounded-lg border px-4 py-2 font-medium transition-colors duration-150
+      focus:outline-none focus:ring-2 focus:ring-slate-500/50;
+    background-color: var(--bg-elevated);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
   }
 
   .btn-danger {
@@ -54,15 +91,21 @@ body {
   }
 
   .input-field {
-    @apply w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2
-      text-slate-200 placeholder-slate-500 transition-colors
-      focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50;
+    @apply w-full rounded-lg border px-3 py-2 transition-colors
+      focus:outline-none focus:ring-1;
+    background-color: var(--bg-elevated);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+  }
+  .input-field::placeholder {
+    color: var(--text-muted);
+  }
+  .input-field:focus {
+    border-color: var(--accent);
   }
 
   .select-field {
-    @apply w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2
-      text-slate-200 transition-colors
-      focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50;
+    @apply input-field;
   }
 }
 
@@ -76,10 +119,10 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-card);
+  background: var(--bg-elevated);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--text-muted);
 }

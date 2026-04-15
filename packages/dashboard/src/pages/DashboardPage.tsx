@@ -2,10 +2,12 @@ import { useMemo } from 'react'
 import { useEntityStore } from '../stores/entity-store'
 import { EntityCard } from '../components/cards/EntityCard'
 import { SceneQuickCards } from '../components/cards/SceneQuickCards'
+import { useTranslation } from '../i18n/useTranslation'
 
 export function DashboardPage() {
   const entities = useEntityStore((s) => s.entities)
   const loading = useEntityStore((s) => s.loading)
+  const { t } = useTranslation()
 
   const groupedByRoom = useMemo(() => {
     const groups: Record<string, typeof entityList> = {}
@@ -61,14 +63,18 @@ export function DashboardPage() {
             👋
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-base md:text-lg font-semibold text-white">
-              Welcome home
+            <h3 className="text-base md:text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {t('welcome.title')}
             </h3>
-            <p className="mt-1 text-sm text-slate-400">
-              Tap the 🎤 button to control by voice — try saying
-              <span className="mx-1 px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-xs">打开客厅的灯</span>
-              or
-              <span className="mx-1 px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-xs">晚安</span>
+            <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+              {t('welcome.body')}
+              <span className="mx-1 px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}>
+                {t('welcome.example1')}
+              </span>
+              {t('welcome.or')}
+              <span className="mx-1 px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}>
+                {t('welcome.example2')}
+              </span>
             </p>
           </div>
         </div>

@@ -2,9 +2,12 @@ export interface ParsedTopic {
   readonly domain: string
   readonly deviceId: string
   readonly suffix: string
+  /** Original prefix: "smarthome" (our native) or "homeassistant" (HA-compatible) */
+  readonly prefix: string
 }
 
-const TOPIC_PREFIX = 'smarthome'
+const NATIVE_PREFIX = 'smarthome'
+const HA_PREFIX = 'homeassistant'
 const SEGMENT_COUNT = 4
 
 export function parseTopic(topic: string): ParsedTopic | null {
@@ -16,11 +19,11 @@ export function parseTopic(topic: string): ParsedTopic | null {
 
   const [prefix, domain, deviceId, suffix] = segments
 
-  if (prefix !== TOPIC_PREFIX || !domain || !deviceId || !suffix) {
+  if ((prefix !== NATIVE_PREFIX && prefix !== HA_PREFIX) || !domain || !deviceId || !suffix) {
     return null
   }
 
-  return Object.freeze({ domain, deviceId, suffix })
+  return Object.freeze({ prefix, domain, deviceId, suffix })
 }
 
 export function buildTopic(
@@ -28,5 +31,9 @@ export function buildTopic(
   deviceId: string,
   suffix: string,
 ): string {
-  return `${TOPIC_PREFIX}/${domain}/${deviceId}/${suffix}`
+  return `${NATIVE_PREFIX}/${domain}/${deviceId}/${suffix}`
+}
+
+export function isHomeAssistantTopic(topic: string): boolean {
+  return topic.startsWith(`${HA_PREFIX}/`)
 }

@@ -1,4 +1,6 @@
 import type { PageId } from '../../types'
+import { useTranslation } from '../../i18n/useTranslation'
+import type { TranslationKey } from '../../i18n/translations'
 
 interface MobileBottomNavProps {
   currentPage: PageId
@@ -7,21 +9,22 @@ interface MobileBottomNavProps {
 
 interface NavItem {
   id: PageId
-  label: string
+  labelKey: TranslationKey
   icon: string
 }
 
 const navItems: NavItem[] = [
-  { id: 'dashboard', label: 'Home', icon: '⊞' },
-  { id: 'devices', label: 'Devices', icon: '⚙' },
-  { id: 'scenes', label: 'Scenes', icon: '🎬' },
-  { id: 'orbital', label: 'Orbital', icon: '🔮' },
-  { id: 'history', label: 'History', icon: '⏱' },
+  { id: 'dashboard', labelKey: 'nav.home', icon: '⊞' },
+  { id: 'devices', labelKey: 'nav.devices', icon: '⚙' },
+  { id: 'scenes', labelKey: 'nav.scenes', icon: '🎬' },
+  { id: 'orbital', labelKey: 'nav.orbital', icon: '🔮' },
+  { id: 'features', labelKey: 'nav.features', icon: '✨' },
 ]
 
 export function MobileBottomNav({ currentPage, onNavigate }: MobileBottomNavProps) {
+  const { t } = useTranslation()
+
   const handleNav = (page: PageId) => {
-    // Subtle haptic feedback on supporting devices
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate?.(8)
     }
@@ -30,8 +33,12 @@ export function MobileBottomNav({ currentPage, onNavigate }: MobileBottomNavProp
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-30 flex items-stretch justify-around border-t border-slate-700/50 bg-[var(--bg-secondary)]/95 backdrop-blur md:hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      className="fixed bottom-0 left-0 right-0 z-30 flex items-stretch justify-around border-t backdrop-blur md:hidden"
+      style={{
+        backgroundColor: 'color-mix(in srgb, var(--bg-secondary) 95%, transparent)',
+        borderColor: 'var(--border)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
       aria-label="Primary navigation"
     >
       {navItems.map((item) => {
@@ -42,13 +49,14 @@ export function MobileBottomNav({ currentPage, onNavigate }: MobileBottomNavProp
             onClick={() => handleNav(item.id)}
             aria-current={isActive ? 'page' : undefined}
             className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors ${
-              isActive ? 'text-blue-400' : 'text-slate-400 active:text-slate-200'
+              isActive ? 'text-blue-400' : 'active:opacity-80'
             }`}
+            style={!isActive ? { color: 'var(--text-secondary)' } : undefined}
           >
             <span className={`text-xl transition-transform ${isActive ? 'scale-110' : ''}`}>
               {item.icon}
             </span>
-            <span>{item.label}</span>
+            <span>{t(item.labelKey)}</span>
           </button>
         )
       })}

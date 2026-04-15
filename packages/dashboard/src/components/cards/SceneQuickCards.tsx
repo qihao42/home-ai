@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchScenes, activateScene } from '../../api/client'
 import type { Scene } from '../../types'
 import { useNotificationStore } from '../../stores/notification-store'
+import { useTranslation } from '../../i18n/useTranslation'
 
 const ICON_MAP: Record<string, string> = {
   sunrise: '🌅',
@@ -27,6 +28,7 @@ export function SceneQuickCards() {
   const [loading, setLoading] = useState(true)
   const [activatingId, setActivatingId] = useState<string | null>(null)
   const addNotification = useNotificationStore((s) => s.addNotification)
+  const { t } = useTranslation()
 
   useEffect(() => {
     let cancelled = false
@@ -74,10 +76,12 @@ export function SceneQuickCards() {
   return (
     <section>
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-          Quick Scenes
+        <h3 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
+          {t('scenes.quickTitle')}
         </h3>
-        <span className="text-xs text-slate-500">Tap to activate</span>
+        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+          {t('scenes.tapHint')}
+        </span>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {scenes.map((scene) => {
@@ -88,15 +92,19 @@ export function SceneQuickCards() {
               onClick={() => handleActivate(scene)}
               disabled={isActivating}
               className={`flex flex-col items-center gap-2 rounded-2xl border p-4 transition-all active:scale-95 ${
-                isActivating
-                  ? 'border-blue-500/60 bg-blue-500/15 shadow-lg shadow-blue-500/20'
-                  : 'border-slate-700/50 bg-slate-800/40 hover:bg-slate-800/70'
+                isActivating ? 'shadow-lg shadow-blue-500/20' : ''
               }`}
+              style={{
+                backgroundColor: isActivating ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-card)',
+                borderColor: isActivating ? 'rgba(59, 130, 246, 0.6)' : 'var(--border)',
+              }}
             >
               <span className="text-3xl">{iconFor(scene)}</span>
-              <span className="text-xs font-medium text-white">{scene.name}</span>
+              <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                {scene.name}
+              </span>
               {isActivating && (
-                <span className="text-[10px] text-blue-300">Activating…</span>
+                <span className="text-[10px] text-blue-300">{t('scenes.activating')}</span>
               )}
             </button>
           )

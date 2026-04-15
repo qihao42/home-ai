@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { LedMatrix } from '../components/orbital/LedMatrix'
+import { Sphere3D } from '../components/orbital/Sphere3D'
 import { AnimationEngine } from '../engine/AnimationEngine'
-import { animations, smile, fire, welcome, night, wave, rainbow } from '../engine/animations'
+import { animations, smile, fire, welcome, night, wave, rainbow, refreshWeather } from '../engine/animations'
 import type { Animation, Frame } from '../engine/types'
 import { createEmptyFrame } from '../engine/types'
 import { useEntityStore } from '../stores/entity-store'
@@ -70,6 +71,7 @@ export function OrbitalPage() {
   const [autoReason, setAutoReason] = useState('')
   const [bridgeConnected, setBridgeConnected] = useState(false)
   const [matrixSize, setMatrixSize] = useState(320)
+  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d')
 
   const entities = useEntityStore((s) => s.entities)
 
@@ -84,6 +86,15 @@ export function OrbitalPage() {
     compute()
     window.addEventListener('resize', compute)
     return () => window.removeEventListener('resize', compute)
+  }, [])
+
+  // Refresh weather data on mount and every 10 minutes for the Weather widget
+  useEffect(() => {
+    void refreshWeather()
+    const interval = setInterval(() => {
+      void refreshWeather()
+    }, 10 * 60 * 1000)
+    return () => clearInterval(interval)
   }, [])
 
   // Initialize engine
@@ -211,10 +222,36 @@ export function OrbitalPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* LED Matrix - responsive sizing */}
+        {/* LED display - 2D matrix or 3D sphere */}
         <div className="flex flex-col items-center gap-3 w-full lg:w-auto">
-          <div className="bg-slate-800/50 rounded-2xl p-4 sm:p-6 border border-slate-700/50">
-            <LedMatrix frame={frame} size={matrixSize} />
+          <div
+            className="relative rounded-2xl p-4 sm:p-6 border"
+            style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}
+          >
+            {/* 2D / 3D toggle */}
+            <div className="absolute right-3 top-3 z-10 flex rounded-lg border border-slate-700/50 bg-slate-900/60 p-0.5 text-xs backdrop-blur">
+              <button
+                onClick={() => setViewMode('2d')}
+                className={`px-2.5 py-1 rounded ${
+                  viewMode === '2d' ? 'bg-blue-500/20 text-blue-300' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                2D
+              </button>
+              <button
+                onClick={() => setViewMode('3d')}
+                className={`px-2.5 py-1 rounded ${
+                  viewMode === '3d' ? 'bg-purple-500/20 text-purple-300' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                3D
+              </button>
+            </div>
+            {viewMode === '2d' ? (
+              <LedMatrix frame={frame} size={matrixSize} />
+            ) : (
+              <Sphere3D frame={frame} size={matrixSize} />
+            )}
           </div>
           <div className="flex items-center gap-2 text-sm">
             <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-green-500 animate-pulse' : 'bg-slate-500'}`} />
