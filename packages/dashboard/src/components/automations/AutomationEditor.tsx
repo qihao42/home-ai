@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import type {
   AutomationRule,
   AutomationTrigger,
@@ -31,20 +31,75 @@ const emptyAction: AutomationAction = {
   entityId: '',
 }
 
+/**
+ * The server persists automations in a snake_case + `type` shape whereas the
+ * editor UI works in camelCase + `platform`. Normalize inbound data so existing
+ * automations can be opened for editing without crashing.
+ */
+type ServerTriggerShape = { type?: string; entity_id?: string; above?: number; below?: number; at?: string; from?: string; to?: string }
+type ServerActionShape = { domain?: string; action?: string; entity_id?: string; data?: { device_id?: string; entity_id?: string } }
+
+function normalizeTrigger(t: unknown): AutomationTrigger {
+  if (!t || typeof t !== 'object') return { ...emptyTrigger }
+  const raw = t as ServerTriggerShape & Partial<AutomationTrigger>
+  const platform = (raw.platform ?? (raw.type as AutomationTrigger['platform']) ?? 'state') as AutomationTrigger['platform']
+  return {
+    platform,
+    entityId: raw.entityId ?? raw.entity_id ?? '',
+    from: raw.from,
+    to: raw.to,
+    above: raw.above,
+    below: raw.below,
+    at: raw.at,
+  }
+}
+
+function normalizeAction(a: unknown): AutomationAction {
+  if (!a || typeof a !== 'object') return { ...emptyAction }
+  const raw = a as ServerActionShape & Partial<AutomationAction>
+  return {
+    domain: raw.domain ?? '',
+    action: raw.action ?? '',
+    entityId: raw.entityId ?? raw.entity_id ?? raw.data?.entity_id ?? raw.data?.device_id ?? '',
+    data: (raw as { data?: Record<string, unknown> }).data,
+  }
+}
+
+function normalizeCondition(c: unknown): AutomationCondition {
+  if (!c || typeof c !== 'object') return { ...emptyCondition }
+  const raw = c as { type?: string; entity_id?: string; state?: string; above?: number; below?: number; after?: string; before?: string } & Partial<AutomationCondition>
+  return {
+    type: (raw.type as AutomationCondition['type']) ?? 'state',
+    entityId: raw.entityId ?? raw.entity_id ?? '',
+    state: raw.state,
+    above: raw.above,
+    below: raw.below,
+    after: raw.after,
+    before: raw.before,
+  }
+}
+
 export function AutomationEditor({ automation, onClose }: AutomationEditorProps) {
   const { create, update } = useAutomationStore()
-  const entities = useEntityStore((s) => Object.values(s.entities))
+  // Select the stable reference from the store, then derive the array via
+  // useMemo. A bare `(s) => Object.values(s.entities)` selector returns a new
+  // array every render and triggers Zustand's "getSnapshot should be cached"
+  // infinite-loop error.
+  const entitiesMap = useEntityStore((s) => s.entities)
+  const entities = useMemo(() => Object.values(entitiesMap), [entitiesMap])
 
   const [name, setName] = useState(automation?.name ?? '')
   const [enabled, _setEnabled] = useState(automation?.enabled ?? true)
-  const [trigger, setTrigger] = useState<AutomationTrigger>(
-    automation?.trigger ?? { ...emptyTrigger }
+  const [trigger, setTrigger] = useState<AutomationTrigger>(() =>
+    automation ? normalizeTrigger(automation.trigger) : { ...emptyTrigger }
   )
-  const [conditions, setConditions] = useState<AutomationCondition[]>(
-    automation?.conditions ?? []
+  const [conditions, setConditions] = useState<AutomationCondition[]>(() =>
+    automation?.conditions ? automation.conditions.map(normalizeCondition) : []
   )
-  const [actions, setActions] = useState<AutomationAction[]>(
-    automation?.actions ?? [{ ...emptyAction }]
+  const [actions, setActions] = useState<AutomationAction[]>(() =>
+    automation?.actions && automation.actions.length > 0
+      ? automation.actions.map(normalizeAction)
+      : [{ ...emptyAction }]
   )
   const [saving, setSaving] = useState(false)
 

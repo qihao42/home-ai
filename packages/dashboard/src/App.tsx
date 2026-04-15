@@ -12,6 +12,7 @@ import { useEntityStore } from './stores/entity-store'
 import { useSettingsStore } from './stores/settings-store'
 import { ToastContainer } from './components/notifications/ToastContainer'
 import { VoiceButton } from './components/voice/VoiceButton'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import type { PageId } from './types'
 
 function getInitialPage(): PageId {
@@ -85,7 +86,9 @@ export function App() {
         onNavigate={handleNavigate}
         connected={connected}
       >
-        {renderPage()}
+        {/* A fresh boundary per page — key by currentPage so navigating
+            resets the error state automatically. */}
+        <ErrorBoundary key={currentPage}>{renderPage()}</ErrorBoundary>
       </MainLayout>
       <VoiceButton />
       <ToastContainer />
